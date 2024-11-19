@@ -2,5 +2,6 @@ streamlit
 pandas
 joblib
 langchain
+langchain-community
 cohere
 
