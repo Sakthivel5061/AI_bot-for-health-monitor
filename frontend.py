@@ -105,7 +105,7 @@ if uploaded_file is not None:
         predictions = predict_health_condition(input_data)
         
         # Add predictions to the data
-        input_data['Health Condition'] = ['Patient is in good health condition ' if pred == 0 else 'Patient is in bad health condition' for pred in predictions]
+        input_data['Health Condition'] = ['Good' if pred == 0 else 'Bad' for pred in predictions]
         
         # Display the results and generate medical advice
         st.subheader("Prediction Results and Medical Advice")
