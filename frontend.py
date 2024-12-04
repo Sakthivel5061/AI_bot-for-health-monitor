@@ -37,26 +37,14 @@ def predict_health_condition(input_data):
 st.title("Health Condition Prediction System")
 st.write("Upload a CSV file containing patient health details to predict their health condition and get medical advice.")
 
-# API Key input with hiding feature
-if "api_key" not in st.session_state:
-    st.session_state.api_key = ""
-
-if st.session_state.api_key == "":
-    api_key_input = st.text_input("Enter your Cohere API Key:", type="password")
-    if api_key_input:
-        st.session_state.api_key = api_key_input
-        st.success("API key has been securely stored.")
-else:
-    st.write("Cohere API Key has been securely stored.")
-    st.button("Reset API Key", on_click=lambda: st.session_state.update({"api_key": ""}))
-
-# Stop execution if API key is not provided
-if not st.session_state.api_key:
+# Input for Cohere API Key
+api_key = st.text_input("Enter your Cohere API Key:", type="password")
+if not api_key:
     st.warning("Please provide your Cohere API key to proceed.")
     st.stop()
 
 # Initialize the Cohere LLM
-llm = Cohere(cohere_api_key=st.session_state.api_key, temperature=0.7, model="command-xlarge")
+llm = Cohere(cohere_api_key=api_key, temperature=0.7, model="command-xlarge")
 
 # Define LangChain prompt template
 prompt_template = """
