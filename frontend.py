@@ -4,6 +4,7 @@ import joblib
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_community.llms import Cohere
+import os
 
 # Load the trained model and scaler
 model = joblib.load('gradient_boosting_model_optimized.joblib')
@@ -33,15 +34,29 @@ def predict_health_condition(input_data):
     predictions = model.predict(scaled_data)
     return predictions
 
+# Function to get or set Cohere API key
+def get_api_key():
+    api_key = os.getenv("eFRVbQsIUffeq4kVoCGMyY2daYbaQKgL6QUwJdRo")  # Check for environment variable
+    if not api_key:  # Prompt user for API key if not found
+        st.warning("API key not set. Please enter your Cohere API key.")
+        api_key = st.text_input("Enter Cohere API Key:", type="password")
+        if st.button("Save API Key"):
+            os.environ["eFRVbQsIUffeq4kVoCGMyY2daYbaQKgL6QUwJdRo"] = api_key
+            st.success("API key saved successfully!")
+    if not api_key:
+        raise ValueError("Cohere API key is required to proceed.")
+    return api_key
+
 # Streamlit UI
 st.title("Health Condition Prediction System")
 st.write("Upload a CSV file containing patient health details to predict their health condition and get medical advice.")
 
-# Input for Cohere API Key
-api_key = st.text_input("Enter your Cohere API Key:", type="password")
-if not api_key:
-    st.warning("Please provide your Cohere API key to proceed.")
-    st.stop()
+# Get Cohere API Key
+try:
+    api_key = get_api_key()
+except ValueError as e:
+    st.error(str(e))
+    st.stop()  # Stop execution if API key is not provided
 
 # Initialize the Cohere LLM
 llm = Cohere(cohere_api_key=api_key, temperature=0.7, model="command-xlarge")
