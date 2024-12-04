@@ -4,7 +4,6 @@ import joblib
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_community.llms import Cohere
-import os
 
 # Load the trained model and scaler
 model = joblib.load('gradient_boosting_model_optimized.joblib')
@@ -34,32 +33,31 @@ def predict_health_condition(input_data):
     predictions = model.predict(scaled_data)
     return predictions
 
-# Function to get or set Cohere API key
-def get_api_key():
-    api_key = os.getenv("eFRVbQsIUffeq4kVoCGMyY2daYbaQKgL6QUwJdRo")  # Check for environment variable
-    if not api_key:  # Prompt user for API key if not found
-        st.warning("API key not set. Please enter your Cohere API key.")
-        api_key = st.text_input("Enter Cohere API Key:", type="password")
-        if st.button("Save API Key"):
-            os.environ["eFRVbQsIUffeq4kVoCGMyY2daYbaQKgL6QUwJdRo"] = api_key
-            st.success("API key saved successfully!")
-    if not api_key:
-        raise ValueError("Cohere API key is required to proceed.")
-    return api_key
-
 # Streamlit UI
 st.title("Health Condition Prediction System")
 st.write("Upload a CSV file containing patient health details to predict their health condition and get medical advice.")
 
-# Get Cohere API Key
-try:
-    api_key = get_api_key()
-except ValueError as e:
-    st.error(str(e))
-    st.stop()  # Stop execution if API key is not provided
+# Handle API key securely
+if "api_key" not in st.session_state:
+    st.session_state.api_key = ""
+
+if st.session_state.api_key == "":
+    api_key_input = st.text_input("Enter your Cohere API Key:", type="password")
+    if api_key_input:
+        st.session_state.api_key = api_key_input
+        st.success("API key has been securely stored.")
+else:
+    st.write("Cohere API Key is securely stored. Reset it if required.")
+    if st.button("Reset API Key"):
+        st.session_state.api_key = ""
+
+# Stop execution if API key is not provided
+if not st.session_state.api_key:
+    st.warning("Please provide your Cohere API key to proceed.")
+    st.stop()
 
 # Initialize the Cohere LLM
-llm = Cohere(cohere_api_key=api_key, temperature=0.7, model="command-xlarge")
+llm = Cohere(cohere_api_key=st.session_state.api_key, temperature=0.7, model="command-xlarge")
 
 # Define LangChain prompt template
 prompt_template = """
@@ -107,7 +105,7 @@ if uploaded_file is not None:
         predictions = predict_health_condition(input_data)
         
         # Add predictions to the data
-        input_data['Health Condition'] = ['Good Health Condition' if pred == 0 else 'Bad Health Condition' for pred in predictions]
+        input_data['Health Condition'] = ['Patient is in good health condition' if pred == 0 else 'Patient is in bad health condition' for pred in predictions]
         
         # Display the results and generate medical advice
         st.subheader("Prediction Results and Medical Advice")
@@ -138,6 +136,3 @@ if uploaded_file is not None:
     
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
-
-
-
